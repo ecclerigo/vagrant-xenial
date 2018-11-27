@@ -3,22 +3,28 @@
   become: true
   vars:
     users:
-    - mundo
-    - admin
+    - username: "mundo"
+      groups: "root,admin,www-data"
+    - username: "paul"
+      groups: "admin,www-data"
+    - username: "tanya"
+      groups: "www-data"
+    - username: "ruby"
+      groups: "www-data"
   tasks:
-    - name: Make sure we can connect
-      ping:
-    - name: Create admin group
-      group:
-        name:  admin
-        state: present
-    - name: "Create user accounts and add users to groups"
-      user:
-        name: "{{ item }}"
-        groups: "admin"
-      with_items: "{{ users }}"
-    - name: "Add authorized keys"
-      authorized_key:
-        user: "{{ item }}"
-        key: "{{ lookup('file', 'files/'+ item + '.key.pub') }}"
-      with_items: "{{ users }}"
+  - name: "Create user accounts"
+    user:
+      name: "{{ item.username }}"
+      groups: "{{ item.groups }}"
+    with_items: "{{ users }}"
+  - name: "Add authorized keys"
+    authorized_key:
+      user: "{{ item.username }}"
+      key: "{{ lookup('file', 'files/'+ item.username + '.key.pub') }}"
+    with_items: "{{ users }}"
+  - name: "Allow admin users to sudo without a password"
+    lineinfile:
+      dest: "/etc/sudoers" # path: in version 2.3
+      state: "present"
+      regexp: "^%admin"
+      line: "%admin ALL=(ALL) NOPASSWD: ALL"
