@@ -22,13 +22,22 @@ Vagrant.configure("2") do |config|
   # Provider
    config.vm.provider "virtualbox" do |vb|
      # Display the VirtualBox GUI when booting the machine
-     vb.memory = "1024"
+     vb.customize ["modifyvm", :id, "--cpuexecutioncap", "90"]
+     vb.memory = "2048"
      vb.cpus = 2
    end
 
   # Provisioning 
    config.vm.provision "shell", inline: <<-SHELL
      apt-get update
+     apt-get install -y software-properties-common
+     apt-add-repository ppa:ansible/ansible
+     apt-get update
+     apt-get install -y ansible
    SHELL
+   config.vm.provision "ansible" do |ansible|
+     ansible.playbook = "provisioning/playbook.yml"
+   end
+
 
 end
